@@ -1,18 +1,22 @@
 package com.lucasangelo.libraryapi.api.resource;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lucasangelo.libraryapi.api.dto.BookDTO;
+import com.lucasangelo.libraryapi.model.entity.Book;
+import com.lucasangelo.libraryapi.service.BookService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MockMvcResultMatchersDsl;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -30,11 +34,20 @@ public class BookControllerTest {
     @Autowired // Mock MVC configurada em "@AutoConfigureMockMvc" e ativada aqui
     MockMvc mvc; // Objeto mockado. Esse objeto que vai estar mockando as requisições (Para simular)
 
+    @MockBean // É um mock específico
+    BookService service;
+
     @Test
     @DisplayName("Deve criar um livro com sucesso. (POST)")
     public void createBookTest() throws Exception {
 
-        String json = new ObjectMapper().writeValueAsString(null); // O write recebe objeto e retorna json
+        BookDTO dto =  BookDTO.builder().title("João").author("Aventuras").isbn("001").build();
+
+        Book savedBook = Book.builder().id(10l).title("João").author("Aventuras").isbn("001").build();
+
+        BDDMockito.given(service.save(Mockito.any(Book.class))).willReturn(savedBook);
+
+        String json = new ObjectMapper().writeValueAsString(dto); // O write recebe objeto e retorna json
 
         // Classe usada para definir uma requisição
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
@@ -48,8 +61,9 @@ public class BookControllerTest {
                 .perform(request) // Utilizando o objeto que foi preparado
                 .andExpect( MockMvcResultMatchers.status().isCreated() ) // Espera retornar o 201 CREATED
                 .andExpect( MockMvcResultMatchers.jsonPath("id").isNotEmpty() ) // E espera receber o JSON criado também
-                .andExpect( MockMvcResultMatchers.jsonPath("title").value("Meu livro") )
-                .andExpect( MockMvcResultMatchers.jsonPath("isbn").value("123") ).andExpect( MockMvcResultMatchers.jsonPath("title").value("Meu livro") )
+                .andExpect( MockMvcResultMatchers.jsonPath("title").value(dto.getTitle()) )
+                .andExpect( MockMvcResultMatchers.jsonPath("author").value(dto.getAuthor()) )
+                .andExpect( MockMvcResultMatchers.jsonPath("isbn").value(dto.getIsbn()) )
         ;
 
     }
