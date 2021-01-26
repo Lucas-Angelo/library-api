@@ -41,10 +41,11 @@ public class BookControllerTest {
     @DisplayName("Deve criar um livro com sucesso. (POST)")
     public void createBookTest() throws Exception {
 
-        BookDTO dto =  BookDTO.builder().title("João").author("Aventuras").isbn("001").build();
+        // Dto é o que vem tipo o JSON, não da pra salvar assim
+        BookDTO dto = BookDTO.builder().title("João").author("Aventuras").isbn("001").build();
 
-        Book savedBook = Book.builder().id(10l).title("João").author("Aventuras").isbn("001").build();
-
+        // Para salvar, é necessário criar o objeto do tipo livro (Book)
+        Book savedBook = Book.builder().id(10L).title("João").author("Aventuras").isbn("001").build();
         BDDMockito.given(service.save(Mockito.any(Book.class))).willReturn(savedBook);
 
         String json = new ObjectMapper().writeValueAsString(dto); // O write recebe objeto e retorna json
@@ -60,7 +61,7 @@ public class BookControllerTest {
         mvc
                 .perform(request) // Utilizando o objeto que foi preparado
                 .andExpect( MockMvcResultMatchers.status().isCreated() ) // Espera retornar o 201 CREATED
-                .andExpect( MockMvcResultMatchers.jsonPath("id").isNotEmpty() ) // E espera receber o JSON criado também
+                .andExpect( MockMvcResultMatchers.jsonPath("id").value(10L) ) // E espera receber o JSON criado também
                 .andExpect( MockMvcResultMatchers.jsonPath("title").value(dto.getTitle()) )
                 .andExpect( MockMvcResultMatchers.jsonPath("author").value(dto.getAuthor()) )
                 .andExpect( MockMvcResultMatchers.jsonPath("isbn").value(dto.getIsbn()) )
